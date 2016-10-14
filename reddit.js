@@ -11,26 +11,17 @@ var menuChoices = [
   {name: 'Show subreddit', value: 'showsub'},
   {name: 'List subreddits', value: 'listsubs'}
 ];
-var subredditMenu = []
-var postMenu = []
+var choices;
 
-function pushPost(post) {
-  postMenu.push(post.data.title);
-}
-
-function listSubreddits(post) {
-  subredditMenu.push(post.data.url);
-}
-
-function displayPost(info) {
+function displayPost(info, choices) {
   return inquirer.prompt({
     type:'list',
     name: 'post',
     message: 'Choose a post',
-    choices: postMenu
+    choices: choices
   })
   .then(function(userChoice) {
-    postMenu.push(new inquirer.Separator(), 'Main Menu', new inquirer.Separator());
+    choices.push(new inquirer.Separator(), 'Main Menu', new inquirer.Separator());
 
     switch(userChoice.post) {
       case 'Main Menu':
@@ -41,6 +32,7 @@ function displayPost(info) {
           return onePost.data.title === userChoice.post;
         });
 
+        console.log('\n');
         console.log(filteredChoice[0].data.title.white.bold);
         console.log( ('https://reddit.com' + filteredChoice[0].data.permalink).blue.underline );
         console.log('Author: ' + filteredChoice[0].data.author + ', from r/' + filteredChoice[0].data.subreddit)
@@ -64,9 +56,11 @@ function mainMenu() {
       case 'homepage':
         return reddit.getHomepage()
         .then(function(data) {
-          data.forEach(pushPost);
+          choices = data.map(function(post) {
+            return post.data.title;
+          });
           
-          return displayPost(data);
+          return displayPost(data, choices);
         });
 
       case 'showsub':
@@ -81,8 +75,11 @@ function mainMenu() {
           
           return reddit.getSubreddit(userChoice)
           .then(function(data) {
-            data.forEach(pushPost);
-            return displayPost();
+            choices = data.map(function(post) {
+              return post.data.title;
+            });
+            
+            return displayPost(data, choices);
           });
         })
 
@@ -90,14 +87,16 @@ function mainMenu() {
 
         return reddit.getSubreddits()
         .then(function(data) {
-          data.forEach(listSubreddits)
-          subredditMenu.push(new inquirer.Separator(), 'Main Menu', new inquirer.Separator());
+          choices = data.map(function(post) {
+            return post.data.title;
+          });
+          choices.push(new inquirer.Separator(), 'Main Menu', new inquirer.Separator());
 
           return inquirer.prompt({
           type: 'list',
           name: 'subs',
           message: 'Which subreddit would you like to go to?',
-          choices: subredditMenu
+          choices: choices
           })
           .then(function(userChoice) {
             
@@ -108,9 +107,11 @@ function mainMenu() {
             default:
               return reddit.getSubreddit(userChoice.subs)
               .then(function(data) {
-                data.forEach(pushPost);
+                choices = data.map(function(post) {
+                  return post.data.title;
+                });
 
-                return displayPost();
+                return displayPost(data, choices);
               })
             }
           })
