@@ -11,20 +11,45 @@ var menuChoices = [
   {name: 'Show subreddit', value: 'showsub'},
   {name: 'List subreddits', value: 'listsubs'}
 ];
-
 var subredditMenu = []
+var postMenu = []
 
-function displayPost(post) {
-  console.log(post.data.title.bold);
-  console.log( ('https://reddit.com' + post.data.permalink).blue.underline );
-  console.log('Author: ' + post.data.author + ', from r/' + post.data.subreddit)
-  console.log('\n');
+function pushPost(post) {
+  postMenu.push(post.data.title);
 }
 
 function listSubreddits(post) {
   subredditMenu.push(post.data.url);
 }
 
+function displayPost(info) {
+  return inquirer.prompt({
+    type:'list',
+    name: 'post',
+    message: 'Choose a post',
+    choices: postMenu
+  })
+  .then(function(userChoice) {
+    postMenu.push(new inquirer.Separator(), 'Main Menu', new inquirer.Separator());
+
+    switch(userChoice.post) {
+      case 'Main Menu':
+        return mainMenu();
+
+      default:
+        var filteredChoice = info.filter(function(onePost) {
+          return onePost.data.title === userChoice.post;
+        });
+
+        console.log(filteredChoice[0].data.title.white.bold);
+        console.log( ('https://reddit.com' + filteredChoice[0].data.permalink).blue.underline );
+        console.log('Author: ' + filteredChoice[0].data.author + ', from r/' + filteredChoice[0].data.subreddit)
+        console.log('\n');
+
+        return mainMenu();
+    }
+  })
+}
 
 function mainMenu() {
   return inquirer.prompt({
@@ -37,11 +62,12 @@ function mainMenu() {
     
     switch(data.menu) {
       case 'homepage':
-
         return reddit.getHomepage()
         .then(function(data) {
-        data.forEach(displayPost);
-        })
+          data.forEach(pushPost);
+          
+          return displayPost(data);
+        });
 
       case 'showsub':
 
@@ -55,8 +81,9 @@ function mainMenu() {
           
           return reddit.getSubreddit(userChoice)
           .then(function(data) {
-            data.forEach(displayPost);
-          })
+            data.forEach(pushPost);
+            return displayPost();
+          });
         })
 
       case 'listsubs':
@@ -64,6 +91,7 @@ function mainMenu() {
         return reddit.getSubreddits()
         .then(function(data) {
           data.forEach(listSubreddits)
+          subredditMenu.push(new inquirer.Separator(), 'Main Menu', new inquirer.Separator());
 
           return inquirer.prompt({
           type: 'list',
@@ -73,10 +101,18 @@ function mainMenu() {
           })
           .then(function(userChoice) {
             
-            return reddit.getSubreddit(userChoice.subs)
-            .then(function(data) {
-              data.forEach(displayPost);
-            })
+          switch(userChoice.subs) {
+            case 'Main Menu':
+              return mainMenu()
+            
+            default:
+              return reddit.getSubreddit(userChoice.subs)
+              .then(function(data) {
+                data.forEach(pushPost);
+
+                return displayPost();
+              })
+            }
           })
         })
 
