@@ -12,11 +12,17 @@ var menuChoices = [
   {name: 'List subreddits', value: 'listsubs'}
 ];
 
+var subredditMenu = []
+
 function displayPost(post) {
   console.log(post.data.title.bold);
   console.log( ('https://reddit.com' + post.data.permalink).blue.underline );
   console.log('Author: ' + post.data.author + ', from r/' + post.data.subreddit)
   console.log('\n');
+}
+
+function listSubreddits(post) {
+  subredditMenu.push(post.data.url);
 }
 
 
@@ -45,7 +51,7 @@ function mainMenu() {
           message: 'Which subreddit:',
         })
         .then(function(answer) {
-          var userChoice = String(answer.choice).toLowerCase();
+          var userChoice = '/r/' + String(answer.choice).toLowerCase() + '/';
           
           return reddit.getSubreddit(userChoice)
           .then(function(data) {
@@ -54,9 +60,25 @@ function mainMenu() {
         })
 
       case 'listsubs':
-        skip = 'listsubs'
-        console.log('nothing in showsub yet');
-        return;
+
+        return reddit.getSubreddits()
+        .then(function(data) {
+          data.forEach(listSubreddits)
+
+          return inquirer.prompt({
+          type: 'list',
+          name: 'subs',
+          message: 'Which subreddit would you like to go to?',
+          choices: subredditMenu
+          })
+          .then(function(userChoice) {
+            
+            return reddit.getSubreddit(userChoice.subs)
+            .then(function(data) {
+              data.forEach(displayPost);
+            })
+          })
+        })
 
       default:
         return;

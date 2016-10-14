@@ -8,7 +8,7 @@ function getHomepage() {
 		core.requestJSON('https://reddit.com/.json')
 		.then(function(result) {
 			var homePage = result.data.children;
-			
+
 			return homePage;
 		})
 	);
@@ -20,7 +20,7 @@ function getSortedHomepage(sorting) {
 		core.requestJSON('https://reddit.com/' + sortingMethod + '.json')
 		.then(function(result) {
 			var homeSorted = result.data.children;
-			
+
 			return homeSorted;
 		})
 	)
@@ -29,10 +29,10 @@ function getSortedHomepage(sorting) {
 function getSubreddit(subreddit) {
 	var sub = String(subreddit).toLowerCase();
 	return (
-		core.requestJSON('https://reddit.com/r/' + sub + '.json')
+		core.requestJSON('https://reddit.com' + sub + '.json')
 		.then(function(result) {
 			var subReddit = result.data.children;
-			
+
 			return subReddit;
 		})
 	)
@@ -45,7 +45,7 @@ function getSortedSubreddit(sorting, subreddit) {
 		core.requestJSON('https://reddit.com/r/' + subToSort + '/' + sortingSub + '.json')
 		.then(function(result) {
 			var sortedSub = result.data.children
-			
+
 			return sortedSub;
 		})
 	)
@@ -56,7 +56,7 @@ function getSubreddits() {
 		core.requestJSON('https://reddit.com/subreddits.json')
 		.then(function(result) {
 			var subReddits = result.data.children
-			console.log(subReddits);
+
 			return subReddits;
 		})
 	)
